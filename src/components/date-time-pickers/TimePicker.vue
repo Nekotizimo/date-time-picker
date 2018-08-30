@@ -1,13 +1,13 @@
 <template>
-  <div class="tdp-time-picker" :style="{width: selectWidth}" >
-    <div class="tp-button-select-cont">
-      <button class="tp-button-select" :class="status" @click="toggleOpened()">
-        <span class="tp-button-select-text">{{ text }}</span>
-        <span class="tp-button-select-value">{{ value }}</span>
+  <div class="tdp-time-picker" :style="{width: buttonWidth}">
+    <div class="tp-button-cont">
+      <button class="tp-button" :class="classes" 
+        @click="toggleOpened()" ref="tp-button">
+        <span class="tp-button-text">{{ text }}</span>
+        <span class="tp-button-value">{{ value }}</span>
       </button>
-      
       <transition name="tp-panel">
-        <div class="tp-panel" :class="status" :style="{width: panelWidth}" v-show="status.opened">
+        <div class="tp-panel" :class="classes" :style="{'width': panelWidth}" v-show="classes.opened">
           <div class="tp-panel-value">
             <h3>{{ value }}</h3>
           </div>
@@ -70,7 +70,7 @@
 <script>
 export default {
   props: {
-    selectWidth: { type: String },
+    buttonWidth: { type: String },
     columns: { type: Number },
     hoursInterval: { type: Number },
     minutesInterval: { type: Number },
@@ -81,8 +81,10 @@ export default {
     return {
       text: 'Select time: ',
       init: false,
-      status: {
-        opened: false
+      classes: {
+        opened: false,
+        up: false,
+        down: true
       },
       hours24: [
         '00',
@@ -289,10 +291,23 @@ export default {
       }
     },
     toggleOpened() {
-      this.status.opened = !this.status.opened;
-      this.$refs['tp-hours-cont'].scrollTop = 22.5 * (this.hourSelected / this.hoursInterval - 2);
-      this.$refs['tp-minutes-cont'].scrollTop = 22.5 * (this.minuteSelected / this.minutesInterval - 2);
-      this.$refs['tp-seconds-cont'].scrollTop = 22.5 * (this.secondSelected / this.secondsInterval - 2);
+      if (!this.classes.opened) {
+        if (this.buttonPos().y <= this.$windowHeight / 2) {
+          this.classes.up = false;
+          this.classes.down = true;
+        } else {
+          this.classes.up = true;
+          this.classes.down = false;
+        }
+      }
+      this.$refs['tp-hours-cont'].scrollTop = 19 * (this.hourSelected / this.hoursInterval - 2);
+      console.log(this.$refs['tp-minutes-cont'].scrollTop);
+      console.log(19 * (this.minuteSelected / this.minutesInterval - 2));
+      this.$refs['tp-minutes-cont'].scrollTop = 19 * (this.minuteSelected / this.minutesInterval - 2);
+      console.log(this.$refs['tp-minutes-cont'].scrollTop);
+      this.$refs['tp-seconds-cont'].scrollTop = 19 * (this.secondSelected / this.secondsInterval - 2);
+      console.log(this.$refs);
+      this.classes.opened = !this.classes.opened;
     },
     changeHour(event) {
       this.hourSelected = event.srcElement.id.charAt(0) + event.srcElement.id.charAt(1);
@@ -305,6 +320,19 @@ export default {
     },
     changeAmpm(event) {
       this.ampmSelected = event.srcElement.id.charAt(0) + event.srcElement.id.charAt(1);
+    },
+    buttonPos() {
+      if (this.$refs['tp-button'] === undefined) {
+        return {
+          x: 0,
+          y: 0
+        };
+      }
+      var rect = this.$refs['tp-button'].getBoundingClientRect();
+      return {
+        x: rect.left + (rect.right - rect.left) / 2,
+        y: rect.top + (rect.bottom - rect.top) / 2
+      };
     }
   }
 };
@@ -315,13 +343,13 @@ export default {
   margin: auto;
 }
 
-.tp-button-select-cont {
+.tp-button-cont {
   overflow: visible;
-  height: 3em;
+  height: 3rem;
   padding: 1em;
 }
 
-.tp-button-select {
+.tp-button {
   cursor: pointer;
   font-family: inherit;
   font-size: 1rem;
@@ -337,12 +365,12 @@ export default {
   transition: border-color 0.1s ease-in-out;
 }
 
-.tp-button-select:hover,
-.tp-button-select.opened:hover {
+.tp-button:hover,
+.tp-button.opened:hover {
   border-color: #2dbd39;
 }
 
-.tp-button-select.opened {
+.tp-button.opened {
   border-color: #47d653;
 }
 
@@ -352,7 +380,7 @@ span {
   margin: 0.1rem 0.3rem;
 }
 
-.tp-button-select-text {
+.tp-button-text {
   font-size: 70%;
 }
 
@@ -360,24 +388,31 @@ span {
   display: none;
   position: relative;
   height: 12em;
-  margin: 0.6em 0px;
+  margin: 0.5em 0px;
   background-color: #ffffff;
   border-radius: 0.5em;
   border: 1px solid #c4c4c4;
   overflow: hidden;
 }
 
-.tp-panel-enter-active {
-  transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out;
+.tp-panel.up {
+  transform: translateY(-16.5em);
 }
 
+.tp-panel-enter-active,
 .tp-panel-leave-active {
   transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out;
 }
 
-.tp-panel-leave-to,
-.tp-panel-enter {
-  transform: translateY(-50px);
+.tp-panel-leave-to.down,
+.tp-panel-enter.down {
+  transform: translateY(-3.5em);
+  opacity: 0;
+}
+
+.tp-panel-leave-to.up,
+.tp-panel-enter.up {
+  transform: translateY(-13em);
   opacity: 0;
 }
 

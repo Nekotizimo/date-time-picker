@@ -1,7 +1,7 @@
 <template>
   <div class="cont" id="time-picker-cont">
     <time-picker 
-      selectWidth="400px"
+      buttonWidth="400px"
       :columns="4"
       :hoursInterval="1"
       :minutesInterval="1"

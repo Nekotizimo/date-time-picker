@@ -1,6 +1,6 @@
 body {
   font-family: 'Avenir', 'Cordia New', Arial, sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   margin: 20px 40px;
   background: #fafaf6
 }
@@ -10,6 +10,8 @@ body>h1, body>h3, body>div {
 }
 
 .cont {
+  margin-top: 1000px;
+  margin-bottom: 1000px;
   width: 100%;
   background: #e7e7e7;
   border-radius: 0.5rem;
