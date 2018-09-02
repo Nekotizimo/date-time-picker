@@ -2,13 +2,14 @@
   <div class="tdp-time-picker" :style="{width: buttonWidth}">
     <div class="tp-button-cont">
       <button class="tp-button" :class="classes" 
-        @click="toggleOpened()" ref="tp-button">
+        @click="toggleOpened()" @mouseover="buttonHovered = true" @mouseout="buttonHovered = false" ref="tp-button"
+        :style="buttonStyles">
         <span class="tp-button-text">{{ text }}</span>
         <span class="tp-button-value">{{ value }}</span>
       </button>
       <transition name="tp-panel">
-        <div class="tp-panel" :class="classes" :style="{'width': panelWidth}" v-show="classes.opened">
-          <div class="tp-panel-value">
+        <div class="tp-panel" :class="classes" :style="panelStyles" v-show="classes.opened">
+          <div class="tp-panel-value" :style="panelValueStyles">
             <h3>{{ value }}</h3>
           </div>
           <div class="tp-panel-labels">
@@ -19,45 +20,51 @@
           </div>
           <div class="tp-panel-numbers">
             <div v-if="hoursInterval" ref="tp-hours-cont">
-              <fieldset v-if="ampm" class="tp-hours" @change="changeHour($event)">
+              <fieldset v-if="ampm" class="tp-hours">
                 <template v-for="(hour, i) in hours12" v-if="i % hoursInterval === 0">
-                  <input :id="hour + '-hr-num'" type="radio" name="hour" :key="i * 2" 
-                    :checked="hour == hourSelected">
-                  <label :for="hour + '-hr-num'" :key="i * 2 + 1">{{ hour }}</label>
+                  <input :id="name + '-' + hour + '-hr-num'" type="radio" name="hour" :key="i * 2" 
+                    :checked="hour == selectedHour" :value="hour" v-model="selectedHour">
+                  <label :for="name + '-' + hour + '-hr-num'" :key="i * 2 + 1" @mouseover="hoveredHour = hour" 
+                    @mouseout="hoveredHour = ''" :style="hourNumbersStyles(hour)">{{ hour }}</label>
                 </template>
               </fieldset>
-              <fieldset v-if="!ampm" class="tp-hours" @change="changeHour($event)">
+              <fieldset v-if="!ampm" class="tp-hours">
                 <template v-for="(hour, i) in hours24" v-if="i % hoursInterval === 0">
-                  <input :id="hour + '-hr-num'" type="radio" name="hour" :key="i * 2" 
-                    :checked="hour == hourSelected">
-                  <label :for="hour + '-hr-num'" :key="i * 2 + 1">{{ hour }}</label>
+                  <input :id="name + '-' + hour + '-hr-num'" type="radio" name="hour" :key="i * 2" 
+                    :checked="hour == selectedHour" :value="hour" v-model="selectedHour">
+                  <label :for="name + '-' + hour + '-hr-num'" :key="i * 2 + 1" @mouseover="hoveredHour = hour"
+                    @mouseout="hoveredHour = ''" :style="hourNumbersStyles(hour)">{{ hour }}</label>
                 </template>
               </fieldset>
             </div>
             <div v-if="minutesInterval" ref="tp-minutes-cont">
-              <fieldset class="tp-minutes" @change="changeMinute($event)">
+              <fieldset class="tp-minutes">
                 <template v-for="(minute, i) in minutes" v-if="i % minutesInterval === 0">
-                  <input :id="minute + '-min-num'" type="radio" name="minute" :key="i * 2"
-                    :checked="minute == minuteSelected">
-                  <label :for="minute + '-min-num'" :key="i * 2 + 1">{{ minute }}</label>
+                  <input :id="name + '-' + minute + '-min-num'" type="radio" name="minute" :key="i * 2"
+                    :checked="minute == selectedMinute" :value="minute" v-model="selectedMinute">
+                  <label :for="name + '-' + minute + '-min-num'" :key="i * 2 + 1" @mouseover="hoveredMinute = minute"
+                    @mouseout="hoveredMinute = ''" :style="minuteNumbersStyles(minute)">{{ minute }}</label>
                 </template>
               </fieldset>
             </div>
             <div v-if="secondsInterval" ref="tp-seconds-cont">
-              <fieldset class="tp-seconds" @change="changeSecond($event)">
+              <fieldset class="tp-seconds">
                 <template v-for="(second, i) in seconds" v-if="i % secondsInterval === 0">
-                  <input :id="second + '-sec-num'" type="radio" name="second" :key="i * 2"
-                    :checked="second == secondSelected">
-                  <label :for="second + '-sec-num'" :key="i * 2 + 1">{{ second }}</label>
+                  <input :id="name + '-' + second + '-sec-num'" type="radio" name="second" :key="i * 2"
+                    :checked="second == selectedSecond" :value="second" v-model="selectedSecond">
+                  <label :for="name + '-' + second + '-sec-num'" :key="i * 2 + 1" @mouseover="hoveredSecond = second" 
+                    @mouseout="hoveredMinute = ''" :style="secondNumbersStyles(second)">{{ second }}</label>
                 </template>
               </fieldset>
             </div>
             <div v-if="ampm" ref="tp-ampm-cont">
-              <fieldset class="tp-ampm" @change="changeAmpm($event)">
-                <input id="am-num" type="radio" name="ampm" :checked="ampmSelected">
-                <label for="am-num">am</label>
-                <input id="pm-num" type="radio" name="ampm" :checked="ampmSelected">
-                <label for="pm-num">pm</label>
+              <fieldset class="tp-ampm">
+                <input :id="name + '-' + 'am-num'" type="radio" name="ampm" value="am" v-model="selectedAmpm">
+                <label :for="name + '-' + 'am-num'" @mouseover="hoveredAmpm = 'am'" @mouseout="hoveredAmpm = ''"
+                  :style="ampmNumbersStyles('am')">am</label>
+                <input :id="name + '-' + 'pm-num'" type="radio" name="ampm" value="pm" v-model="selectedAmpm">
+                <label :for="name + '-' + 'pm-num'" @mouseover="hoveredAmpm = 'pm'" @mouseout="hoveredAmpm = ''" 
+                  :style="ampmNumbersStyles('pm')">pm</label>
               </fieldset>
             </div>         
           </div>
@@ -70,7 +77,9 @@
 <script>
 export default {
   props: {
+    name: { type: String },
     buttonWidth: { type: String },
+    colors: { type: Object },
     columns: { type: Number },
     hoursInterval: { type: Number },
     minutesInterval: { type: Number },
@@ -237,31 +246,67 @@ export default {
         '58',
         '59'
       ],
-      hourSelected: '00',
-      minuteSelected: '00',
-      secondSelected: '00',
-      ampmSelected: 'am'
+      selectedHour: '00',
+      selectedMinute: '00',
+      selectedSecond: '00',
+      selectedAmpm: 'am',
+      hoveredHour: '00',
+      hoveredMinute: '00',
+      hoveredSecond: '00',
+      hoveredAmpm: 'am',
+      buttonHovered: false
     };
   },
   computed: {
     value() {
       var value = '';
       if (this.hoursInterval) {
-        value += this.hourSelected;
+        value += this.selectedHour;
       }
       if (this.minutesInterval) {
-        value += ':' + this.minuteSelected;
+        value += ':' + this.selectedMinute;
       }
       if (this.secondsInterval) {
-        value += ':' + this.secondSelected;
+        value += ':' + this.selectedSecond;
       }
       if (this.ampm) {
-        value += this.ampmSelected;
+        value += this.selectedAmpm;
       }
       return value;
     },
     panelWidth() {
       return 4.5 * this.columns + 'em';
+    },
+    buttonStyles() {
+      if (this.buttonHovered) {
+        return {
+          border: '1px solid ' + this.colors.mid,
+          backgroundColor: this.colors.white
+        };
+      } else if (this.classes.opened) {
+        return {
+          border: '1px solid ' + this.colors.light,
+          backgroundColor: this.colors.white
+        };
+      } else {
+        return {
+          border: '1px solid ' + this.colors.grey,
+          backgroundColor: this.colors.white
+        };
+      }
+    },
+    panelStyles() {
+      return {
+        width: this.panelWidth,
+        border: '1px solid ' + this.colors.grey,
+        backgroundColor: this.colors.white
+      };
+    },
+    panelValueStyles() {
+      return {
+        color: this.colors.white,
+        backgroundColor: this.colors.mid
+      };
     }
   },
   created() {
@@ -278,16 +323,16 @@ export default {
         if (hr == 0) {
           ampmhr = 12;
         }
-        this.hourSelected = ampmhr < 10 ? '0' + ampmhr : ampmhr;
+        this.selectedHour = ampmhr < 10 ? '0' + ampmhr : ampmhr;
       } else {
-        this.hourSelected = hr < 10 ? '0' + hr : hr;
+        this.selectedHour = hr < 10 ? '0' + hr : hr;
       }
-      this.minuteSelected = min < 10 ? '0' + min : min;
-      this.secondSelected = sec < 10 ? '0' + sec : sec;
+      this.selectedMinute = min < 10 ? '0' + min : min;
+      this.selectedSecond = sec < 10 ? '0' + sec : sec;
       if (hr < 12) {
-        this.ampmSelected = 'am';
+        this.selectedAmpm = 'am';
       } else {
-        this.ampmSelected = 'pm';
+        this.selectedAmpm = 'pm';
       }
     },
     toggleOpened() {
@@ -300,26 +345,22 @@ export default {
           this.classes.down = false;
         }
       }
-      this.$refs['tp-hours-cont'].scrollTop = 19 * (this.hourSelected / this.hoursInterval - 2);
-      console.log(this.$refs['tp-minutes-cont'].scrollTop);
-      console.log(19 * (this.minuteSelected / this.minutesInterval - 2));
-      this.$refs['tp-minutes-cont'].scrollTop = 19 * (this.minuteSelected / this.minutesInterval - 2);
-      console.log(this.$refs['tp-minutes-cont'].scrollTop);
-      this.$refs['tp-seconds-cont'].scrollTop = 19 * (this.secondSelected / this.secondsInterval - 2);
-      console.log(this.$refs);
+      setTimeout(
+        function() {
+          if (this.hoursInterval != 0) {
+            this.$refs['tp-hours-cont'].scrollTop =
+              19 * (this.selectedHour / this.hoursInterval - (this.ampm ? 3 : 2));
+          }
+          if (this.minutesInterval != 0) {
+            this.$refs['tp-minutes-cont'].scrollTop = 19 * (this.selectedMinute / this.minutesInterval - 2);
+          }
+          if (this.secondsInterval != 0) {
+            this.$refs['tp-seconds-cont'].scrollTop = 19 * (this.selectedSecond / this.secondsInterval - 2);
+          }
+        }.bind(this),
+        2
+      );
       this.classes.opened = !this.classes.opened;
-    },
-    changeHour(event) {
-      this.hourSelected = event.srcElement.id.charAt(0) + event.srcElement.id.charAt(1);
-    },
-    changeMinute(event) {
-      this.minuteSelected = event.srcElement.id.charAt(0) + event.srcElement.id.charAt(1);
-    },
-    changeSecond(event) {
-      this.secondSelected = event.srcElement.id.charAt(0) + event.srcElement.id.charAt(1);
-    },
-    changeAmpm(event) {
-      this.ampmSelected = event.srcElement.id.charAt(0) + event.srcElement.id.charAt(1);
     },
     buttonPos() {
       if (this.$refs['tp-button'] === undefined) {
@@ -333,6 +374,78 @@ export default {
         x: rect.left + (rect.right - rect.left) / 2,
         y: rect.top + (rect.bottom - rect.top) / 2
       };
+    },
+    hourNumbersStyles(hour) {
+      if (hour == this.selectedHour) {
+        return {
+          color: this.colors.white,
+          backgroundColor: this.colors.dark
+        };
+      } else if (hour == this.hoveredHour) {
+        return {
+          color: this.colors.white,
+          backgroundColor: this.colors.mid
+        };
+      } else {
+        return {
+          color: this.colors.black,
+          backgroundColor: this.colors.white
+        };
+      }
+    },
+    minuteNumbersStyles(minute) {
+      if (minute == this.selectedMinute) {
+        return {
+          color: this.colors.white,
+          backgroundColor: this.colors.dark
+        };
+      } else if (minute == this.hoveredMinute) {
+        return {
+          color: this.colors.white,
+          backgroundColor: this.colors.mid
+        };
+      } else {
+        return {
+          color: this.colors.black,
+          backgroundColor: this.colors.white
+        };
+      }
+    },
+    secondNumbersStyles(second) {
+      if (second == this.selectedSecond) {
+        return {
+          color: this.colors.white,
+          backgroundColor: this.colors.dark
+        };
+      } else if (second == this.hoveredSecond) {
+        return {
+          color: this.colors.white,
+          backgroundColor: this.colors.mid
+        };
+      } else {
+        return {
+          color: this.colors.black,
+          backgroundColor: this.colors.white
+        };
+      }
+    },
+    ampmNumbersStyles(ampm) {
+      if (ampm == this.selectedAmpm) {
+        return {
+          color: this.colors.white,
+          backgroundColor: this.colors.dark
+        };
+      } else if (ampm == this.hoveredAmpm) {
+        return {
+          color: this.colors.white,
+          backgroundColor: this.colors.mid
+        };
+      } else {
+        return {
+          color: this.colors.black,
+          backgroundColor: this.colors.white
+        };
+      }
     }
   }
 };
@@ -360,18 +473,8 @@ export default {
   overflow: visible;
   border-radius: 0.5em;
   outline: none;
-  border: 1px solid #c4c4c4;
   text-align: left;
   transition: border-color 0.1s ease-in-out;
-}
-
-.tp-button:hover,
-.tp-button.opened:hover {
-  border-color: #2dbd39;
-}
-
-.tp-button.opened {
-  border-color: #47d653;
 }
 
 span {
@@ -389,9 +492,7 @@ span {
   position: relative;
   height: 12em;
   margin: 0.5em 0px;
-  background-color: #ffffff;
   border-radius: 0.5em;
-  border: 1px solid #c4c4c4;
   overflow: hidden;
 }
 
@@ -426,12 +527,7 @@ span {
   display: block;
 }
 
-.tp-panel-value {
-  background-color: #2dbd39;
-}
-
 h3 {
-  color: #f8f8f8;
   margin: 0px;
   line-height: 2em;
 }
@@ -471,15 +567,5 @@ label {
   display: block;
   cursor: pointer;
   transition: background-color 0.1s;
-}
-
-label:hover {
-  background-color: #0fd81f;
-  color: #f8f8f8;
-}
-
-input:checked + label {
-  background-color: #079713;
-  color: #f8f8f8;
 }
 </style>
