@@ -2,13 +2,13 @@
   <div class="tdp-time-picker" :style="{width: buttonWidth}">
     <div class="tp-button-cont">
       <button class="tp-button" :class="classes" 
-        @click="toggleOpened()" @mouseover="buttonHovered = true" @mouseout="buttonHovered = false" ref="tp-button"
-        :style="buttonStyles">
+        @click="toggleOpened()" @mouseover="buttonHovered = true" @mouseout="buttonHovered = false" 
+        ref="tp-button" :style="buttonStyles">
         <span class="tp-button-text">{{ text }}</span>
         <span class="tp-button-value">{{ value }}</span>
       </button>
       <transition name="tp-panel">
-        <div class="tp-panel" :class="classes" :style="panelStyles" v-show="classes.opened">
+        <div class="tp-panel" ref="tp-panel" :class="classes" :style="panelStyles" v-show="classes.opened" v-on-clickaway="close">
           <div class="tp-panel-value" :style="panelValueStyles">
             <h3>{{ value }}</h3>
           </div>
@@ -360,7 +360,12 @@ export default {
         }.bind(this),
         2
       );
-      this.classes.opened = !this.classes.opened;
+      this.classes.opened = true;
+    },
+    close() {
+      if (window.getComputedStyle(this.$refs['tp-panel']).getPropertyValue('display') != 'none') {
+        this.classes.opened = false;
+      }
     },
     buttonPos() {
       if (this.$refs['tp-button'] === undefined) {
