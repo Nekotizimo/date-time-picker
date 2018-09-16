@@ -5,12 +5,12 @@
         @click="toggleOpened()" @mouseover="buttonHovered = true" @mouseout="buttonHovered = false" 
         ref="tp-button" :style="buttonStyles">
         <span class="tp-button-text">{{ text }}</span>
-        <span class="tp-button-value">{{ value }}</span>
+        <span class="tp-button-value">{{ value.string }}</span>
       </button>
       <transition name="tp-panel">
         <div class="tp-panel" ref="tp-panel" :class="classes" :style="panelStyles" v-show="classes.opened" v-on-clickaway="close">
           <div class="tp-panel-value" :style="panelValueStyles">
-            <h3>{{ value }}</h3>
+            <h3>{{ value.string }}</h3>
           </div>
           <div class="tp-panel-labels">
             <div v-if="hoursInterval"><h5>hr</h5></div>
@@ -23,7 +23,7 @@
               <fieldset v-if="ampm" class="tp-hours">
                 <template v-for="(hour, i) in hours12" v-if="i % hoursInterval === 0">
                   <input :id="name + '-' + hour + '-hr-num'" type="radio" name="hour" :key="i * 2" 
-                    :checked="hour == selectedHour" :value="hour" v-model="selectedHour">
+                    :checked="hour == selectedHour" :value="hour" v-model="selectedHour" @input="updateValue()">
                   <label :for="name + '-' + hour + '-hr-num'" :key="i * 2 + 1" @mouseover="hoveredHour = hour" 
                     @mouseout="hoveredHour = ''" :style="hourNumbersStyles(hour)">{{ hour }}</label>
                 </template>
@@ -31,7 +31,7 @@
               <fieldset v-if="!ampm" class="tp-hours">
                 <template v-for="(hour, i) in hours24" v-if="i % hoursInterval === 0">
                   <input :id="name + '-' + hour + '-hr-num'" type="radio" name="hour" :key="i * 2" 
-                    :checked="hour == selectedHour" :value="hour" v-model="selectedHour">
+                    :checked="hour == selectedHour" :value="hour" v-model="selectedHour" @input="updateValue()">
                   <label :for="name + '-' + hour + '-hr-num'" :key="i * 2 + 1" @mouseover="hoveredHour = hour"
                     @mouseout="hoveredHour = ''" :style="hourNumbersStyles(hour)">{{ hour }}</label>
                 </template>
@@ -41,7 +41,7 @@
               <fieldset class="tp-minutes">
                 <template v-for="(minute, i) in minutes" v-if="i % minutesInterval === 0">
                   <input :id="name + '-' + minute + '-min-num'" type="radio" name="minute" :key="i * 2"
-                    :checked="minute == selectedMinute" :value="minute" v-model="selectedMinute">
+                    :checked="minute == selectedMinute" :value="minute" v-model="selectedMinute" @input="updateValue()">
                   <label :for="name + '-' + minute + '-min-num'" :key="i * 2 + 1" @mouseover="hoveredMinute = minute"
                     @mouseout="hoveredMinute = ''" :style="minuteNumbersStyles(minute)">{{ minute }}</label>
                 </template>
@@ -51,7 +51,7 @@
               <fieldset class="tp-seconds">
                 <template v-for="(second, i) in seconds" v-if="i % secondsInterval === 0">
                   <input :id="name + '-' + second + '-sec-num'" type="radio" name="second" :key="i * 2"
-                    :checked="second == selectedSecond" :value="second" v-model="selectedSecond">
+                    :checked="second == selectedSecond" :value="second" v-model="selectedSecond" @input="updateValue()">
                   <label :for="name + '-' + second + '-sec-num'" :key="i * 2 + 1" @mouseover="hoveredSecond = second" 
                     @mouseout="hoveredMinute = ''" :style="secondNumbersStyles(second)">{{ second }}</label>
                 </template>
@@ -59,10 +59,10 @@
             </div>
             <div v-if="ampm" ref="tp-ampm-cont">
               <fieldset class="tp-ampm">
-                <input :id="name + '-' + 'am-num'" type="radio" name="ampm" value="am" v-model="selectedAmpm">
+                <input :id="name + '-' + 'am-num'" type="radio" name="ampm" value="am" v-model="selectedAmpm" @input="updateValue()">
                 <label :for="name + '-' + 'am-num'" @mouseover="hoveredAmpm = 'am'" @mouseout="hoveredAmpm = ''"
                   :style="ampmNumbersStyles('am')">am</label>
-                <input :id="name + '-' + 'pm-num'" type="radio" name="ampm" value="pm" v-model="selectedAmpm">
+                <input :id="name + '-' + 'pm-num'" type="radio" name="ampm" value="pm" v-model="selectedAmpm" @input="updateValue()">
                 <label :for="name + '-' + 'pm-num'" @mouseover="hoveredAmpm = 'pm'" @mouseout="hoveredAmpm = ''" 
                   :style="ampmNumbersStyles('pm')">pm</label>
               </fieldset>
@@ -77,14 +77,26 @@
 <script>
 export default {
   props: {
-    name: { type: String },
-    buttonWidth: { type: String },
-    colors: { type: Object },
-    columns: { type: Number },
-    hoursInterval: { type: Number },
-    minutesInterval: { type: Number },
-    secondsInterval: { type: Number },
-    ampm: { type: Boolean }
+    name: { type: String, default: '' },
+    buttonWidth: { type: String, default: '100%' },
+    colors: {
+      type: Object,
+      default() {
+        return {
+          light: '#0fd81f',
+          mid: '#2dbd39',
+          dark: '#079713',
+          white: '#ffffff',
+          grey: '#c4c4c4',
+          black: '#050505'
+        };
+      }
+    },
+    columns: { type: Number, default: 4 },
+    hoursInterval: { type: Number, default: 1 },
+    minutesInterval: { type: Number, default: 1 },
+    secondsInterval: { type: Number, default: 1 },
+    ampm: { type: Boolean, default: true }
   },
   data() {
     return {
@@ -259,20 +271,26 @@ export default {
   },
   computed: {
     value() {
-      var value = '';
+      var string = '';
       if (this.hoursInterval) {
-        value += this.selectedHour;
+        string += this.selectedHour;
       }
       if (this.minutesInterval) {
-        value += ':' + this.selectedMinute;
+        string += ':' + this.selectedMinute;
       }
       if (this.secondsInterval) {
-        value += ':' + this.selectedSecond;
+        string += ':' + this.selectedSecond;
       }
       if (this.ampm) {
-        value += this.selectedAmpm;
+        string += this.selectedAmpm;
       }
-      return value;
+      return {
+        string: string,
+        hour: this.selectedHour,
+        minute: this.selectedMinute,
+        second: this.selectedSecond,
+        ampm: this.selectedAmpm
+      };
     },
     panelWidth() {
       return 4.5 * this.columns + 'em';
@@ -334,6 +352,15 @@ export default {
       } else {
         this.selectedAmpm = 'pm';
       }
+      this.$emit('input', this.value);
+    },
+    updateValue() {
+      setTimeout(
+        function() {
+          this.$emit('input', this.value);
+        }.bind(this),
+        1
+      );
     },
     toggleOpened() {
       if (!this.classes.opened) {

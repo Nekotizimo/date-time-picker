@@ -2,6 +2,7 @@
   <div class="cont" id="time-picker-cont">
     <time-picker
       name="tp-1"
+      v-model="time"
       buttonWidth="400px"
       :colors="{
         light: '#0fd81f', 
@@ -10,13 +11,18 @@
         white: '#ffffff', 
         grey: '#c4c4c4', 
         black: '#050505'}"
-      :columns="4"
+      :columns="3"
       :hoursInterval="1"
-      :minutesInterval="1"
-      :secondsInterval="1"
+      :minutesInterval="5"
+      :secondsInterval="0"
       :ampm="true">
     </time-picker>
-    <time-picker 
+    <!-- <time-picker
+      name="tp-1"
+      v-model="time">
+    </time-picker> -->
+    <p>{{ time.string }}</p>
+    <!-- <time-picker 
       name="tp-2"
       buttonWidth="600px"
       :colors="{
@@ -31,7 +37,7 @@
       :minutesInterval="1"
       :secondsInterval="0"
       :ampm="false">
-    </time-picker>
+    </time-picker> -->
   </div>
 </template>
 
@@ -42,6 +48,11 @@ export default {
   name: 'time-picker-mod',
   components: {
     'time-picker': TimePicker
+  },
+  data() {
+    return {
+      time: ''
+    }
   }
 };
 </script>
