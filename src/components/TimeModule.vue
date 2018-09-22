@@ -21,7 +21,6 @@
       name="tp-1"
       v-model="time">
     </time-picker> -->
-    <p>{{ time.string }}</p>
     <!-- <time-picker 
       name="tp-2"
       buttonWidth="600px"

@@ -78,6 +78,7 @@
 export default {
   props: {
     name: { type: String, default: '' },
+    text: { type: String, default: 'Select time: '},
     buttonWidth: { type: String, default: '100%' },
     colors: {
       type: Object,
@@ -100,7 +101,6 @@ export default {
   },
   data() {
     return {
-      text: 'Select time: ',
       init: false,
       classes: {
         opened: false,
@@ -491,7 +491,7 @@ export default {
 .tp-button-cont {
   overflow: visible;
   height: 3rem;
-  padding: 1em;
+  padding: 0.5em;
 }
 
 .tp-button {

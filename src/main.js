@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import TimePickerMod from './components/TimeModule.vue';
+import DatePickerMod from './components/DateModule.vue'
 import { mixin as clickaway } from 'vue-clickaway';
 
 Vue.config.productionTip = false;
@@ -20,3 +21,7 @@ window.addEventListener('resize', function() {
 new Vue({
   render: h => h(TimePickerMod)
 }).$mount('#time-picker');
+
+new Vue({
+  render: h => h(DatePickerMod)
+}).$mount('#date-picker');
